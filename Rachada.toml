@@ -1,0 +1,16 @@
+#
+#
+#
+#EPSG = 32647   # optional ; default 32647
+TRJ_IMG = './Data/Trajectory/Trajectory_img.PosC'
+#IMG_FRTO = ['076KNA46062002636','076KNA46062003230' ] # FWD
+IMG_FRTO = ['076KNA46062000757', '076KNA46062001353'] # REV
+REVERSE_TRJ = true   # optional ; default = false
+
+PNT_CLD = './tiles/tile*.las'
+
+#OUT_FOLDER = './CACHE'  # optional ; default './CACHE'
+
+#DIV = 1000   # optional ; default 1000
+STA_BEG = 10300 # option ; default 0+000
+#WIDTH = 30   # optional ; default 30
