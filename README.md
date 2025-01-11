@@ -1,10 +1,10 @@
 # MMS_Box
 
-# MMS_Box : first, clip large LAS files by creating simple rectangular tiles.
-#           Then, create boxes of 1-kilometer length parallel to the road alignment.
-#           Each box will clip out its corresponding point cloud data in multiple parts.
-#           Finally, merge the clipped parts to form the complete point cloud data i
-#           within the full box boundary.**
+MMS_Box : first, clip large LAS files by creating simple rectangular tiles.
+          Then, create boxes of 1-kilometer length parallel to the road alignment.
+          Each box will clip out its corresponding point cloud data in multiple parts.
+          Finally, merge the clipped parts to form the complete point cloud data i
+          within the full box boundary.
 
 
 '''
