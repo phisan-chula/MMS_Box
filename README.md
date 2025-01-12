@@ -23,6 +23,7 @@ tiles/tile0_-3.las
 ```
 
 2) manipulate the folder of tiles using 3 steps by MMS_Box application.  
+  The 4th step is organizing of image files falling within each boxes.  
 
 ```
 usage: MMS_Box.py [-h] [-c] [-m] [--copc] [-i] TOML
