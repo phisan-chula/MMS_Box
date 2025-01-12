@@ -1,9 +1,9 @@
 # MMS_Box
 
-
+1) Preapare retangle tiles of your LAS file.
 pdal tile ../Data/Lasfile/201-00260289.las   "tile#.las" --length 500  
 
-<p>
+```
 tiles/
 tiles/tile0_-1.las
 tiles/tile-1_-4.las
@@ -20,8 +20,7 @@ tiles/tile-3_-6.las
 tiles/tile-2_-6.las
 tiles/tile-2_-3.las
 tiles/tile0_-3.las
-
-</p>
+```
 
 <p>
 MMS_Box : first, clip large LAS files by creating simple rectangular tiles.
