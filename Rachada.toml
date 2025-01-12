@@ -2,13 +2,13 @@
 #
 #
 #EPSG = 32647   # optional ; default 32647
-TRJ_IMG = 'D:\FieldData\Ratchada\Trajectory\Trajectory_img.PosC'
+TRJ_IMG = './Data/Trajectory/Trajectory_img.PosC'
 #IMG_FRTO = ['076KNA46062002636','076KNA46062003230' ] # FWD
 IMG_FRTO = ['076KNA46062000757', '076KNA46062001353'] # REV
 REVERSE_TRJ = true   # optional ; default = false
 
 PNT_CLD = './tiles/tile*.las'
-IMAGES = 'D:\FieldData\Ratchada\Panorama\*.jpg'
+IMAGES = './Data/Panorama/*.jpg'
 
 #OUT_FOLDER = './CACHE'  # optional ; default './CACHE'
 

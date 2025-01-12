@@ -24,8 +24,8 @@ class MMS_BoxViz:
         self.KML_Img( FoldImg )
         FoldImg.visibility = 0
 
-        #FoldTile = kml.newfolder(name="Tiles")
-        #self.KML_Tindex( FoldTile )
+        FoldTile = kml.newfolder(name="Tiles")
+        self.KML_Tindex( FoldTile )
         
         # Save the KML file
         KML = Path( self.TOML.OUT_FOLDER ) / "MMS_BoxViz.kml"
@@ -102,9 +102,7 @@ class MMS_BoxViz:
 
     def KML_Tindex( self, Folder ):
         dfTile = pd.DataFrame(  glob.glob(self.TOML.PNT_CLD), columns=['FileLAS'] )
-        #import pdb; pdb.set_trace()
         def GetLasBound(row):
-            #import pdb; pdb.set_trace()
             with laspy.open( row.FileLAS ) as las:
                 header = las.header
                 # Get boundary coordinates
@@ -114,11 +112,11 @@ class MMS_BoxViz:
             return max_x-min_x, max_y-min_y, max_z-min_z, bnd_rect
         dfTile[['width','length','height','geometry']] = \
              dfTile.apply( GetLasBound, axis=1, result_type='expand' )
-        dfTile = gpd.GeoDataFrame( dfTile, crs='EPSG:4326', geometry=dfTile.geometry )
+        dfTile = gpd.GeoDataFrame( dfTile, crs=self.TOML.EPSG, geometry=dfTile.geometry )
         print( dfTile)
-        dfTile = dfTile.to_crs(4326)
+        dfTile = dfTile.to_crs( crs='EPSG:4326')
+        #import pdb; pdb.set_trace()
         for index, row in dfTile.iterrows():
-            #import pdb; pdb.set_trace()
             coord = list(row.geometry.exterior.coords)
             pol = Folder.newpolygon(name= f'{row.FileLAS}',
                     outerboundaryis=coord )
