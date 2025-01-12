@@ -9,12 +9,13 @@ import tomllib
 import json
 import glob
 import pdal
+import shutil
 import pandas as pd
 import geopandas as gpd
 import numpy as np
 import simplekml
 import argparse
-from shapely.geometry import LineString
+from shapely.geometry import Point,LineString
 from shapely.ops import substring
 from pathlib import Path
 
@@ -25,6 +26,8 @@ class MMS_Box(_MMS_BoxViz.MMS_BoxViz):
         self.FillOptional(TOML)
         self.ARGS = ARGS
         self.dfIMG = pd.read_csv(self.TOML.TRJ_IMG, sep='\\s+',engine='python' )
+        self.dfIMG = gpd.GeoDataFrame( self.dfIMG, crs=self.TOML.EPSG, 
+                geometry=gpd.points_from_xy( self.dfIMG['Easting(m)'], self.dfIMG['Northing(m)'] ) )
         print( f'Reading {len(self.dfIMG)} images...')
         if 'IMG_FRTO' in self.TOML.keys():
             self.dfTRJ = self.Filter( self.dfIMG, self.TOML.IMG_FRTO )
@@ -44,8 +47,7 @@ class MMS_Box(_MMS_BoxViz.MMS_BoxViz):
         #import pdb ; pdb.set_trace()
 
     def FillOptional( self , TOML):
-        DEFAULT = { 'OUT_FOLDER' : './CACHE', 'OUT_MERGE' : 'MERGED',
-                    'EPSG':32647, 'REVERSE_TRJ' : False,
+        DEFAULT = { 'OUT_FOLDER' : './CACHE', 'EPSG':32647, 'REVERSE_TRJ' : False,
                     'DIV':1000,'STA_BEG':0,'WIDTH':30 }
         for k,v in DEFAULT.items():
             if k not in TOML.keys():
@@ -112,6 +114,9 @@ class MMS_Box(_MMS_BoxViz.MMS_BoxViz):
     def GenerateBoxClipTile( self ):
         ''' generate list of operations only, no actual clipping'''
         dfTile = pd.DataFrame(  glob.glob(self.TOML.PNT_CLD), columns=['FileLAS'] )
+        assert len(dfTile)>0,\
+          f'Expecting many tiles from "pdal tile --length 500 BIG_PC.las tile#.las"'
+        #import pdb; pdb.set_trace()
         dfTile['tiles'] = dfTile.index.map(lambda x: f'TILE{x:03d}')  
         self.dfBOX['boxes'] = self.dfBOX.index.map(lambda x: f'BOX{x:03d}')  
         box_tile = list()
@@ -122,6 +127,13 @@ class MMS_Box(_MMS_BoxViz.MMS_BoxViz):
                 box_tile.append( [row_box.boxes, row_box.wkt_geom, row_tile.FileLAS, OUTFILE])
         self.dfCLIP = pd.DataFrame( box_tile , columns=['BOX', 'WKT_GEOM','TILES', 'BOXTILE'] )
 
+    def GenerateBoxClipImage( self ):
+        ''' generate list of operations only, no actual clipping'''
+        joined = gpd.sjoin(self.dfIMG, self.dfBOX[['geometry', 'boxes']], 
+                           how='left', predicate='intersects')
+        self.dfIMG_BOX = joined.dropna()[['Name','boxes', 'geometry']]
+        #import pdb; pdb.set_trace()
+        
     def ClipPoly( self, WKT, INFILE, OUTFILE ):
         polygon = WKT  # Replace with your actual polygon WKT
         pipeline = {
@@ -142,6 +154,7 @@ class MMS_Box(_MMS_BoxViz.MMS_BoxViz):
             "pipeline": [
                 *[{"type": "readers.las", "filename": las_file} for las_file in LASFiles],
                # {   "type": WRITER,  "a_srs":  f"EPSG:{self.TOML.EPSG}" , "filename": str(LASOut) }
+                  { "type":"filters.reprojection", "out_srs":f"EPSG:{self.TOML.EPSG}" },
                 {   "type": WRITER,  "filename": str(LASOut) }
             ]
         }
@@ -155,47 +168,63 @@ class MMS_Box(_MMS_BoxViz.MMS_BoxViz):
 ##################################################################
 ##################################################################
 ##################################################################
-parser = argparse.ArgumentParser()
-parser.add_argument("TOML", 
-        help="TOML file ; read images trajectory and defined parameters")
-parser.add_argument('-c',"--clip", action='store_true',
-        help="clip point-cloud data in multiple parts")
-parser.add_argument('-m', "--merge", action='store_true',
-        help="merge clipped parts within box polygon")
-parser.add_argument("--copc", action='store_true',
-        help='use COPC format instead of LAS, used in "merge" stage')
-ARGS = parser.parse_args()
-print(ARGS)
-with open("Rachada.toml", "rb") as f:
-    # Parse the TOML file content
-    TOML = tomllib.load(f)
-#########################################################
-mms = MMS_Box( TOML, ARGS )
-#import pdb; pdb.set_trace()
-if ARGS.clip or ARGS.merge:
-    mms.GenerateBoxClipTile()
+if __name__=="__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("TOML", 
+            help="TOML file, read trajectory and BOX parameters [STEP-1]")
+    parser.add_argument('-c',"--clip", action='store_true',
+            help="clip point-cloud data in multiple parts [STEP-2]")
+    parser.add_argument('-m', "--merge", action='store_true',
+            help="merge clipped parts, write BOXs of Las [STEP-3]")
+    parser.add_argument("--copc", action='store_true',
+            help='use COPC format instead of LAS, during "merge" stage')
+    parser.add_argument('-i', "--images", action='store_true',
+            help="copy images to BOX folders [STEP-4]")
 
-if ARGS.clip:
-    for i,row in mms.dfCLIP.iterrows():
-        #import pdb; pdb.set_trace()
-        print( f'Clipping las files to {row.BOXTILE} ...' )
-        Path(row.BOXTILE).parent.mkdir( parents=True, exist_ok=True ) 
-        mms.ClipPoly( row.WKT_GEOM, row.TILES, row.BOXTILE ) 
-
-if ARGS.merge:
+    ARGS = parser.parse_args()
+    print(ARGS)
+    with open("Rachada.toml", "rb") as f:
+        # Parse the TOML file content
+        TOML = tomllib.load(f)
+    #####################################
+    mms = MMS_Box( TOML, ARGS )
     TEMPLATE = 'km_{:06d}_{:06d}'
-    if ARGS.copc:
-        WRITER="writers.copc"
-        TEMPLATE = f'{TEMPLATE}.copc.laz'
-    else:
-        WRITER='writers.las'
-        TEMPLATE = f'{TEMPLATE}.las'
-    for grp,row in mms.dfCLIP.groupby('BOX'):
-        this_box = mms.dfBOX[mms.dfBOX.boxes==grp ].iloc[0]
-        #import pdb; pdb.set_trace()
-        OUTFILE = TEMPLATE.format( this_box.km_fr, this_box.km_to )
-        print( f'Merging las files to {OUTFILE} ...' )
-        OUTPATH = Path(mms.TOML.OUT_FOLDER) / 'RESULT' / OUTFILE
-        OUTPATH.parent.mkdir( parents=True, exist_ok=True ) 
-        mms.MergePart( list(row.BOXTILE), WRITER, OUTPATH )
+    mms.GenerateBoxClipTile()
+    #import pdb; pdb.set_trace()
+    if ARGS.clip:
+        for i,row in mms.dfCLIP.iterrows():
+            #import pdb; pdb.set_trace()
+            print( f'Clipping las files to {row.BOXTILE} ...' )
+            Path(row.BOXTILE).parent.mkdir( parents=True, exist_ok=True ) 
+            mms.ClipPoly( row.WKT_GEOM, row.TILES, row.BOXTILE ) 
+
+    if ARGS.merge:
+        if ARGS.copc:
+            WRITER="writers.copc"
+            TEMPLATE = TEMPLATE + '.copc.laz'
+        else:
+            WRITER='writers.las'
+            TEMPLATE = TEMPLATE + '.las'
+        for grp,row in mms.dfCLIP.groupby('BOX'):
+            this_box = mms.dfBOX[mms.dfBOX.boxes==grp ].iloc[0]
+            OUTFILE = TEMPLATE.format( this_box.km_fr, this_box.km_to )
+            print( f'Merging las files to {OUTFILE} ...' )
+            OUTPATH = Path(mms.TOML.OUT_FOLDER) / 'RESULT' / OUTFILE
+            OUTPATH.parent.mkdir( parents=True, exist_ok=True ) 
+            mms.MergePart( list(row.BOXTILE), WRITER, OUTPATH )
+
+    if ARGS.images:
+        mms.GenerateBoxClipImage()
+        dfImages = pd.DataFrame(  glob.glob(mms.TOML.IMAGES), columns=['Images'] )
+        dfImages["Stem"] = dfImages["Images"].apply(lambda x: Path(x).stem) 
+        for i,row in mms.dfIMG_BOX.iterrows():
+            this_box = mms.dfBOX[ mms.dfBOX.boxes==row.boxes].iloc[0]
+            fr = Path( dfImages[dfImages.Stem==row.Name ].iloc[0].Images )
+            to = Path( mms.TOML.OUT_FOLDER ) / 'RESULT' / TEMPLATE.format( this_box.km_fr,this_box.km_to )
+            OUTPATH = to / fr.name
+            print( f'Copying to {OUTPATH} ...' )
+            OUTPATH.parent.mkdir( parents=True, exist_ok=True ) 
+            shutil.copy( fr , OUTPATH  )
+            #import pdb; pdb.set_trace()
+            
 
