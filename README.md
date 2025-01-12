@@ -1,21 +1,26 @@
 # MMS_Box
 
+1) tile your big LAS file into small chunks of rectangle tile of size 500 meter.  
+pdal tile ../Data/Lasfile/201-00260289.las   "tile#.las" --length 500  
 
-pdal tile ../Data/Lasfile/201-00260289.las   "tile#.las" --length 250
-
-<p>
+```
 tiles/
-tiles/tile-4_-10.las
-tiles/tile-3_-8.las
+tiles/tile0_-1.las
+tiles/tile-1_-4.las
+tiles/tile0_-2.las
+tiles/tile-1_-3.las
+tiles/tile-1_0.las
+tiles/tile-1_-1.las
 tiles/tile-2_-5.las
-tiles/tile-3_-10.las
+tiles/tile0_0.las
+tiles/tile-3_-5.las
+tiles/tile-1_-2.las
+tiles/tile-2_-4.las
+tiles/tile-3_-6.las
+tiles/tile-2_-6.las
 tiles/tile-2_-3.las
 tiles/tile0_-3.las
-tiles/tile-4_-9.las
-tiles/tile-1_-7.las
-...
-...
-</p>
+```
 
 MMS_Box : first, clip large LAS files by creating simple rectangular tiles.
           Then, create boxes of 1-kilometer length parallel to the road alignment.
