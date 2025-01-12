@@ -1,7 +1,7 @@
 # MMS_Box
 
-1) Preapare retangle tiles of your LAS file.
-pdal tile ../Data/Lasfile/201-00260289.las   "tile#.las" --length 500  
+1) Preapare retangle tiles of your LAS file, using pdal tile command  
+```pdal tile ../Data/Lasfile/201-00260289.las   "tile#.las" --length 500```
 
 ```
 tiles/
