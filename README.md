@@ -37,5 +37,28 @@ options:
   -m, --merge   merge clipped parts, write BOXs of Las [STEP-3]
   --copc        use COPC format instead of LAS, during "merge" stage
   -i, --images  copy images to BOX folders [STEP-4]
+```  
+  
+3) Result will be put in folder './CACHE or other name specified in TOML
 
-'''
+```
+CACHE/MMS_BoxViz.kml
+
+CACHE/RESULT/km_012000_013000.copc.laz
+CACHE/RESULT/km_011000_012000.copc.laz
+CACHE/RESULT/km_013000_013184.copc.laz
+CACHE/RESULT/km_010300_011000.copc.laz
+
+CACHE/RESULT/km_013000_013184/076KNA46062003201.jpg
+CACHE/RESULT/km_013000_013184/076KNA46062003221.jpg
+CACHE/RESULT/km_013000_013184/076KNA46062000774.jpg
+...
+CACHE/RESULT/km_011000_012000/076KNA46062002872.jpg
+CACHE/RESULT/km_011000_012000/076KNA46062002963.jpg
+CACHE/RESULT/km_011000_012000/076KNA46062001128.jpg
+CACHE/RESULT/km_011000_012000/076KNA46062001009.jpg
+CACHE/RESULT/km_011000_012000/076KNA46062001038.jpg
+...
+```
+
+
