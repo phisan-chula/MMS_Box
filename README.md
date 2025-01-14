@@ -61,5 +61,6 @@ CACHE/RESULT/km_011000_012000/076KNA46062001038.jpg
 ```
 
 ---
+# Misaglignment of installation and heading precision of INS compared to geodetic azimuth  from final trajectory solution.
 ![Alt text](https://github.com/phisan-chula/MMS_Box/blob/main/CHC_AU20_Misalignment.png)
 
