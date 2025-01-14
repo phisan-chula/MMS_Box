@@ -61,4 +61,5 @@ CACHE/RESULT/km_011000_012000/076KNA46062001038.jpg
 ...
 
 ---
-![Alt text](CHC_AU20_Misalignment.png)
+![Alt text](https://github.com/phisan-chula/MMS_Box/blob/main/CHC_AU20_Misalignment.png)
+
