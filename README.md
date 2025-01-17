@@ -38,6 +38,10 @@ options:
   --copc        use COPC format instead of LAS, during "merge" stage
   -i, --images  copy images to BOX folders [STEP-4]
 ```  
+
+# The first result will plot in KML
+![Alt text](https://github.com/phisan-chula/MMS_Box/blob/main/CHC_AU20_Misalignment.png)
+
   
 3) Result will be put in folder './CACHE or other name specified in TOML
 
