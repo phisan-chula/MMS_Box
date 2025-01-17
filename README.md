@@ -40,8 +40,7 @@ options:
 ```  
 
 # The first result will plot in KML
-![Alt text](https://github.com/phisan-chula/MMS_Box/blob/main/CHC_AU20_Misalignment.png)
-
+![Alt text](https://github.com/phisan-chula/MMS_Box/blob/main/MMS_Box_Concept.png)
   
 3) Result will be put in folder './CACHE or other name specified in TOML
 
