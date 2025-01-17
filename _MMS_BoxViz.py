@@ -35,7 +35,7 @@ class MMS_BoxViz:
 
     def KML_Box( self, Folder ):
         colors = ['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99',
-        '#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a']        
+                    '#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a']        
         color_cycle = cycle( colors )
         dfBOX = self.dfBOX.to_crs(4326)
         for index, row in dfBOX.iterrows():
@@ -47,7 +47,8 @@ class MMS_BoxViz:
                 div_len : {row.div_len}
                 num_pnt : {row.npnt}
             """
-            pol.style.polystyle.color = next(color_cycle)  # Transparent red
+            pol.style.polystyle.color = next(color_cycle).replace('#','7f')
+            pol.style.linestyle.color = next(color_cycle).replace('#','ff')
             pol.style.polystyle.outline = 1
 
     def KML_Div( self, Folder ):
@@ -61,9 +62,9 @@ class MMS_BoxViz:
                 dist_0  : {row.dist_0 }
             """
             pnt.style.labelstyle.color = '7f0000ff'
-            pnt.style.iconstyle.scale = 3  # Icon big
+            pnt.style.iconstyle.scale = 1.5  # Icon big
             pnt.style.iconstyle.icon.href =\
-            'http://maps.google.com/mapfiles/kml/shapes/shaded_dot.png'
+                  'http://maps.google.com/mapfiles/kml/shapes/shaded_dot.png'
             pnt.style.iconstyle.color = '7f0000ff'
 
     def KML_Trj( self, Folder ):
@@ -125,5 +126,6 @@ class MMS_BoxViz:
                 length : {row.length:.2f} m.
                 height : {row.height:.2f} m.
             """
-            pol.style.polystyle.color = "7fff0000"  # Transparent red
+            pol.style.polystyle.color = "7F808080" 
+            pol.style.linestyle.color = "7F808080"
             pol.style.polystyle.outline = 2
