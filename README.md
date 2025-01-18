@@ -39,7 +39,7 @@ options:
   -i, --images  copy images to BOX folders [STEP-4]
 ```  
 
-# The first result will plot in KML
+# The result of an MMS mission will be visualized in KML.
 ![Alt text](https://github.com/phisan-chula/MMS_Box/blob/main/MMS_Box_Concept.png)
   
 3) Result will be put in folder './CACHE or other name specified in TOML
