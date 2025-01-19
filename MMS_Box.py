@@ -9,13 +9,14 @@ import tomllib
 import json
 import glob
 import pdal
+import laspy
 import shutil
 import pandas as pd
 import geopandas as gpd
 import numpy as np
 import simplekml
 import argparse
-from shapely.geometry import Point,LineString
+from shapely.geometry import Point,LineString,box
 from shapely.ops import substring
 from pathlib import Path
 
@@ -43,8 +44,6 @@ class MMS_Box(_MMS_BoxViz.MMS_BoxViz):
         self.dfDIV,self.LS = self.LineStringDIV()
         self.dfBOX = self.GenerateBox()
         print( self.dfBOX[['km_fr', 'km_to', 'div_len', 'npnt' , 'geometry']] )
-        self.WriteVizKML()
-        #import pdb ; pdb.set_trace()
 
     def FillOptional( self , TOML):
         DEFAULT = { 'OUT_FOLDER' : './CACHE', 'EPSG':32647, 'REVERSE_TRJ' : False,
@@ -111,31 +110,49 @@ class MMS_Box(_MMS_BoxViz.MMS_BoxViz):
         gdfBox = gpd.GeoDataFrame( dfBox, crs=self.TOML.EPSG, geometry=dfBox.geometry )
         return gdfBox
 
+    def MakeTileIndex( self, dfTile ):
+        def GetLasBound(row):
+            with laspy.open( row.FileLAS ) as las:
+                header = las.header
+                # Get boundary coordinates
+                min_x, min_y, min_z = header.mins
+                max_x, max_y, max_z = header.maxs
+                bnd_rect = box(min_x, min_y, max_x, max_y)
+            return max_x-min_x, max_y-min_y, max_z-min_z, bnd_rect
+        #import pdb; pdb.set_trace()
+        dfTile[['width','length','height','geometry']] = \
+             dfTile.apply( GetLasBound, axis=1, result_type='expand' )
+        dfTile = gpd.GeoDataFrame( dfTile, crs=self.TOML.EPSG, geometry=dfTile.geometry )
+        return dfTile
+
     def GenerateBoxClipTile( self ):
         ''' generate list of operations only, no actual clipping'''
         dfTile = pd.DataFrame(  glob.glob(self.TOML.PNT_CLD), columns=['FileLAS'] )
         assert len(dfTile)>0,\
           f'Expecting many tiles from "pdal tile --length 500 BIG_PC.las tile#.las"'
-        #import pdb; pdb.set_trace()
-        dfTile['tiles'] = dfTile.index.map(lambda x: f'TILE{x:03d}')  
-        self.dfBOX['boxes'] = self.dfBOX.index.map(lambda x: f'BOX{x:03d}')  
+        dfTile['tiles'] = dfTile.index.map(lambda x: f'TILE{x:04d}')  
+        self.dfTile = self.MakeTileIndex( dfTile )
+        self.dfBOX['boxes'] = self.dfBOX.index.map(lambda x: f'BOX{x:04d}')  
+        dfInter = gpd.overlay( self.dfBOX, self.dfTile, how='intersection' )
+        ####################################
         box_tile = list()
-        for i_box,row_box in self.dfBOX.iterrows():
-            box_folder = Path( self.TOML.OUT_FOLDER ) / 'BOX_TILE' / row_box.boxes 
-            for i_tile, row_tile in dfTile.iterrows(): 
+        for i_box,row_box in dfInter.groupby("boxes"):
+            box_folder = Path( self.TOML.OUT_FOLDER ) / 'BOX_TILE' / i_box
+            for i_tile, row_tile in row_box.iterrows(): 
                 OUTFILE = str( box_folder / f'{row_tile.tiles:}.las' )
-                box_tile.append( [row_box.boxes, row_box.wkt_geom, row_tile.FileLAS, OUTFILE])
-        self.dfCLIP = pd.DataFrame( box_tile , columns=['BOX', 'WKT_GEOM','TILES', 'BOXTILE'] )
+                box_tile.append( [i_box, row_tile.geometry, row_tile.FileLAS, OUTFILE])
+        dfCLIP = pd.DataFrame( box_tile , columns=['BOX', 'WKT_GEOM','TILES', 'BOXTILE'] )
+        self.dfCLIP = gpd.GeoDataFrame( dfCLIP,crs=self.TOML.EPSG,geometry=dfCLIP.WKT_GEOM )
+        #import pdb; pdb.set_trace()
 
     def GenerateBoxClipImage( self ):
         ''' generate list of operations only, no actual clipping'''
         joined = gpd.sjoin(self.dfIMG, self.dfBOX[['geometry', 'boxes']], 
                            how='left', predicate='intersects')
         self.dfIMG_BOX = joined.dropna()[['Name','boxes', 'geometry']]
-        #import pdb; pdb.set_trace()
         
     def ClipPoly( self, WKT, INFILE, OUTFILE ):
-        polygon = WKT  # Replace with your actual polygon WKT
+        polygon = WKT  # Replace with your actual polygon "string" WKT
         pipeline = {
             "pipeline": [
                 { "type": "readers.las", "filename": INFILE },
@@ -190,13 +207,15 @@ if __name__=="__main__":
     mms = MMS_Box( TOML, ARGS )
     TEMPLATE = 'km_{:06d}_{:06d}'
     mms.GenerateBoxClipTile()
+    mms.WriteVizGPCK()
+    mms.WriteVizKML()
     #import pdb; pdb.set_trace()
     if ARGS.clip:
         for i,row in mms.dfCLIP.iterrows():
             #import pdb; pdb.set_trace()
             print( f'Clipping las files to {row.BOXTILE} ...' )
             Path(row.BOXTILE).parent.mkdir( parents=True, exist_ok=True ) 
-            mms.ClipPoly( row.WKT_GEOM, row.TILES, row.BOXTILE ) 
+            mms.ClipPoly( str(row.WKT_GEOM), row.TILES, row.BOXTILE ) 
 
     if ARGS.merge:
         if ARGS.copc:
