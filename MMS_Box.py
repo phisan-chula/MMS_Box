@@ -167,20 +167,19 @@ class MMS_Box(_MMS_BoxViz.MMS_BoxViz):
             print(f"Error ClipPoly() LAS files: {e}")
 
     def MergePart( self, LASFiles, WRITER, LASOut):
-        pipeline_dict = {
-            "pipeline": [
-                *[{"type": "readers.las", "filename": las_file} for las_file in LASFiles],
-               # {   "type": WRITER,  "a_srs":  f"EPSG:{self.TOML.EPSG}" , "filename": str(LASOut) }
-                  { "type":"filters.reprojection", "out_srs":f"EPSG:{self.TOML.EPSG}" },
-                {   "type": WRITER,  "filename": str(LASOut) }
-            ]
-        }
+        assert type(LASFiles)==list
+        pipeline_list = LASFiles 
+        pipeline_list.append( { "type":"filters.merge" } )
+        pipeline_list.append( { "type":WRITER, "filename": LASOut } )
+        #import pdb; pdb.set_trace()
+        # Convert dictionary to JSON string
+        pipeline_json = json.dumps(pipeline_list)
+        pipeline = pdal.Pipeline(json=pipeline_json)
         try:
-            pipeline_json = json.dumps(pipeline_dict)
-            pipeline = pdal.Pipeline(pipeline_json)
-            pipeline.execute()  # Execute the pipeline
+            pipeline.execute()
+            print(f"Merging successful. Output file: {LASOut}")
         except Exception as e:
-            print(f"Error MergePart() LAS files: {e}")
+            print(f"Error during MergePart(): {e}")
 
 ##################################################################
 ##################################################################
@@ -197,10 +196,11 @@ if __name__=="__main__":
             help='use COPC format instead of LAS, during "merge" stage')
     parser.add_argument('-i', "--images", action='store_true',
             help="copy images to BOX folders [STEP-4]")
+    parser.add_argument("--version", action="version", version="%(prog)s 0.5")
 
     ARGS = parser.parse_args()
     print(ARGS)
-    with open("Rachada.toml", "rb") as f:
+    with open( ARGS.TOML , "rb") as f:
         # Parse the TOML file content
         TOML = tomllib.load(f)
     #####################################
@@ -230,7 +230,7 @@ if __name__=="__main__":
             print( f'Merging las files to {OUTFILE} ...' )
             OUTPATH = Path(mms.TOML.OUT_FOLDER) / 'RESULT' / OUTFILE
             OUTPATH.parent.mkdir( parents=True, exist_ok=True ) 
-            mms.MergePart( list(row.BOXTILE), WRITER, OUTPATH )
+            mms.MergePart( list(row.BOXTILE), WRITER, str(OUTPATH) )
 
     if ARGS.images:
         mms.GenerateBoxClipImage()
