@@ -72,16 +72,17 @@ CACHE/RESULT/km_011000_012000/076KNA46062001038.jpg
 
 ### 5) The merged MMS_Box in LAS or COPC format can be opened and rendered very quickly in a COPC viewer.
 
-...
--rw-r--r-- 1 phisan phisan 1.1G Jan 20 14:50 km_010300_011000.copc.laz
--rw-r--r-- 1 phisan phisan 9.4G Jan 20 15:19 km_010300_011000.las
--rw-r--r-- 1 phisan phisan 672M Jan 20 14:57 km_011000_012000.copc.laz
--rw-r--r-- 1 phisan phisan 4.7G Jan 20 15:20 km_011000_012000.las
--rw-r--r-- 1 phisan phisan 581M Jan 20 15:01 km_012000_013000.copc.laz
--rw-r--r-- 1 phisan phisan 4.4G Jan 20 15:21 km_012000_013000.las
--rw-r--r-- 1 phisan phisan 351M Jan 20 15:04 km_013000_013184.copc.laz
--rw-r--r-- 1 phisan phisan 3.4G Jan 20 15:22 km_013000_013184.las
-...
+```
+ 1.1G Jan 20 14:50 km_010300_011000.copc.laz
+ 9.4G Jan 20 15:19 km_010300_011000.las
+ 672M Jan 20 14:57 km_011000_012000.copc.laz
+ 4.7G Jan 20 15:20 km_011000_012000.las
+ 581M Jan 20 15:01 km_012000_013000.copc.laz
+ 4.4G Jan 20 15:21 km_012000_013000.las
+ 351M Jan 20 15:04 km_013000_013184.copc.laz
+ 3.4G Jan 20 15:22 km_013000_013184.las
+```
+
 ![Alt text](https://github.com/phisan-chula/MMS_Box/blob/main/MMS_Box_COPCViewer.png)
 
 ### 6) Misaglignment of installation and heading precision of INS compared to geodetic azimuth  from final trajectory solution.
