@@ -64,6 +64,10 @@ CACHE/RESULT/km_011000_012000/076KNA46062001038.jpg
 ```
 
 ---
+
+# The merged MMS_Box in LAS or COPC format can be opened and rendered very quickly in a COPC viewer.
+![Alt text](https://github.com/phisan-chula/MMS_Box/blob/main/MMS_Box_COPCViewer.png)
+
 # Misaglignment of installation and heading precision of INS compared to geodetic azimuth  from final trajectory solution.
 ![Alt text](https://github.com/phisan-chula/MMS_Box/blob/main/CHC_AU20_Misalignment.png)
 
