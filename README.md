@@ -22,8 +22,11 @@ tiles/tile-2_-3.las
 tiles/tile0_-3.las
 ```
 
-2) manipulate the folder of tiles using 3 steps by MMS_Box application.  
-  The 4th step is organizing of image files falling within each boxes.  
+2) manipulate the folder of tiles using first 3 steps by MMS_Box application.
+   Option "-copc" is applied together with -m or --merge option and for
+   producing resource-efficient and performance-optimized COPC format.
+   Otherwise, standard LAS format will be produced during merging step.   
+   The 4th step is organizing of image files falling within each boxes.  
 
 ```
 usage: MMS_Box.py [-h] [-c] [-m] [--copc] [-i] [--version] TOML
