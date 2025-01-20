@@ -26,7 +26,7 @@ tiles/tile0_-3.las
   The 4th step is organizing of image files falling within each boxes.  
 
 ```
-usage: MMS_Box.py [-h] [-c] [-m] [--copc] [-i] TOML
+usage: MMS_Box.py [-h] [-c] [-m] [--copc] [-i] [--version] TOML
 
 positional arguments:
   TOML          TOML file, read trajectory and BOX parameters [STEP-1]
@@ -37,6 +37,8 @@ options:
   -m, --merge   merge clipped parts, write BOXs of Las [STEP-3]
   --copc        use COPC format instead of LAS, during "merge" stage
   -i, --images  copy images to BOX folders [STEP-4]
+  --version     show program's version number and exit
+
 ```  
 
 # The result of an MMS mission will be visualized in KML.
