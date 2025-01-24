@@ -194,9 +194,12 @@ if __name__=="__main__":
             help="merge clipped parts, write BOXs of Las [STEP-3]")
     parser.add_argument("--copc", action='store_true',
             help='use COPC format instead of LAS, during "merge" stage')
+    parser.add_argument("--laz", action='store_true',
+            help='use LAZ format instead of LAS, during "merge" stage')
     parser.add_argument('-i', "--images", action='store_true',
             help="copy images to BOX folders [STEP-4]")
-    parser.add_argument("--version", action="version", version="%(prog)s 0.5")
+    parser.add_argument("--version", action="version", 
+            version="%(prog)s : version 0.6 (24Jan2025)")
 
     ARGS = parser.parse_args()
     print(ARGS)
@@ -219,11 +222,12 @@ if __name__=="__main__":
 
     if ARGS.merge:
         if ARGS.copc:
-            WRITER="writers.copc"
-            TEMPLATE = TEMPLATE + '.copc.laz'
+            WRITER="writers.copc"; TEMPLATE = TEMPLATE + '.copc.laz'
+        elif ARGS.laz:
+            WRITER="writers.las";  TEMPLATE = TEMPLATE + '.laz'
         else:
-            WRITER='writers.las'
-            TEMPLATE = TEMPLATE + '.las'
+            WRITER='writers.las';  TEMPLATE = TEMPLATE + '.las'
+
         for grp,row in mms.dfCLIP.groupby('BOX'):
             this_box = mms.dfBOX[mms.dfBOX.boxes==grp ].iloc[0]
             OUTFILE = TEMPLATE.format( this_box.km_fr, this_box.km_to )
