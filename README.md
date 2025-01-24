@@ -81,9 +81,8 @@ km_010300_011000  10,082  1,092  1,124
 km_011000_012000   5,038    581    704
 km_012000_013000   4,711    517    608
 km_013000_013184   3,598    370    367
-![Alt text](https://github.com/phisan-chula/MMS_Box/blob/main/LASType_SizeMB.png)
 ```
-
+![Alt text](https://github.com/phisan-chula/MMS_Box/blob/main/LASType_SizeMB.png)
 ![Alt text](https://github.com/phisan-chula/MMS_Box/blob/main/MMS_Box_COPCViewer.png)
 
 ### 6) Misaglignment of installation and heading precision of INS compared to geodetic azimuth  from final trajectory solution.
