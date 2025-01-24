@@ -75,15 +75,15 @@ CACHE/RESULT/km_011000_012000/076KNA46062001038.jpg
 
 ### 5) The merged MMS_Box in LAS or COPC format can be opened and rendered very quickly in a COPC viewer.
 
-```
-Table 1: File Size Comparison of LAS, LAZ, and COPC Formats
+Table 1: File Size Comparison of LAS, LAZ, and COPC Formats  
 | Section           | las (MB) | laz (MB) | copc (MB) |
 |-------------------|---------|--------|---------|
 | km_010300_011000 | 10,082  | 1,092  | 1,124   |
 | km_011000_012000 | 5,038   | 581    | 704     |
 | km_012000_013000 | 4,711   | 517    | 608     |
 | km_013000_013184 | 3,598   | 370    | 367     |
-```
+
+
 ![Alt text](https://github.com/phisan-chula/MMS_Box/blob/main/LASType_SizeMB.png)
 ![Alt text](https://github.com/phisan-chula/MMS_Box/blob/main/MMS_Box_COPCViewer.png)
 
