@@ -73,7 +73,7 @@ CACHE/RESULT/km_011000_012000/076KNA46062001038.jpg
 
 ---
 
-### 5) The merged MMS_Box in LAS or COPC format can be opened and rendered very quickly in a COPC viewer.
+### 5) The merged MMS_Box in LAZ or COPC format can be opened and rendered very quickly in a point cloud viewer (e.g., CloudCompare, Potree, ArcGIS)..
 
 Table 1: File Size Comparison of LAS, LAZ, and COPC Formats  
 | Section           | las (MB) | laz (MB) | copc (MB) |
