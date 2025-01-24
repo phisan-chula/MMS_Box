@@ -29,7 +29,7 @@ tiles/tile0_-3.las
    The 4th step is organizing of image files falling within each boxes.  
 
 ```
-usage: MMS_Box.py [-h] [-c] [-m] [--copc] [-i] [--version] TOML
+usage: MMS_Box.py [-h] [-c] [-m] [--copc] [--laz] [-i] [--version] TOML
 
 positional arguments:
   TOML          TOML file, read trajectory and BOX parameters [STEP-1]
@@ -39,6 +39,7 @@ options:
   -c, --clip    clip point-cloud data in multiple parts [STEP-2]
   -m, --merge   merge clipped parts, write BOXs of Las [STEP-3]
   --copc        use COPC format instead of LAS, during "merge" stage
+  --laz         use LAZ format instead of LAS, during "merge" stage
   -i, --images  copy images to BOX folders [STEP-4]
   --version     show program's version number and exit
 
@@ -73,14 +74,13 @@ CACHE/RESULT/km_011000_012000/076KNA46062001038.jpg
 ### 5) The merged MMS_Box in LAS or COPC format can be opened and rendered very quickly in a COPC viewer.
 
 ```
- 1.1G Jan 20 14:50 km_010300_011000.copc.laz
- 9.4G Jan 20 15:19 km_010300_011000.las
- 672M Jan 20 14:57 km_011000_012000.copc.laz
- 4.7G Jan 20 15:20 km_011000_012000.las
- 581M Jan 20 15:01 km_012000_013000.copc.laz
- 4.4G Jan 20 15:21 km_012000_013000.las
- 351M Jan 20 15:04 km_013000_013184.copc.laz
- 3.4G Jan 20 15:22 km_013000_013184.las
+Comparison of LAS formats : las, laz and COPC
+type                las   laz  copc
+Section
+km_010300_011000  10,082  1,092  1,124
+km_011000_012000   5,038    581    704
+km_012000_013000   4,711    517    608
+km_013000_013184   3,598    370    367
 ```
 
 ![Alt text](https://github.com/phisan-chula/MMS_Box/blob/main/MMS_Box_COPCViewer.png)
