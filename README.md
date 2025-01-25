@@ -2,7 +2,7 @@
 
 # MMS_Box 
 
-###  1) Partitioning your big LAS file into small chunks of rectangle tiles of size 500 meter.
+###  1) Partition your large LAS file into smaller rectangular tiles, each tile size is 500 meters.
    Using PDAL eg. pdal tile ../Data/Lasfile/201-00260289.las   "tile#.las" --length 500  
 
 ```
@@ -24,9 +24,10 @@ tiles/tile-2_-3.las
 tiles/tile0_-3.las
 ```
 
-### 2) manipulate the folder of tiles using first 3 steps by MMS_Box application.
+### 2) Manipulate the tile folder using the first three steps of the MMS_Box application.
    Option "-copc" is applied together with -m or --merge option and for
-   producing resource-efficient and performance-optimized COPC format.
+   producing resource-efficient and performance-optimized COPC format or
+   simply industry-standared lossless compress LAZ format.
    Otherwise, standard LAS format will be produced during merging step.   
    The 4th step is organizing of image files falling within each boxes.  
 
@@ -47,7 +48,7 @@ options:
 
 ```  
 
-### 3) The result of an MMS mission will be visualized in KML.
+### 3) The result of an MMS mission will be visualized in KML or GPCK.
 ![Alt text](https://github.com/phisan-chula/MMS_Box/blob/main/MMS_Box_Concept.png)
   
 ### 4) Result will be put in folder './CACHE or other name specified in TOML
