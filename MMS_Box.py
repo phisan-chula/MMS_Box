@@ -24,11 +24,12 @@ import _MMS_BoxViz
 
 class MMS_Box(_MMS_BoxViz.MMS_BoxViz):
     def __init__( self, TOML, ARGS ):
-        self.FillOptional(TOML)
+        self.InitialOptional(TOML)
         self.ARGS = ARGS
         self.dfIMG = pd.read_csv(self.TOML.TRJ_IMG, sep='\\s+',engine='python' )
         self.dfIMG = gpd.GeoDataFrame( self.dfIMG, crs=self.TOML.EPSG, 
-                geometry=gpd.points_from_xy( self.dfIMG['Easting(m)'], self.dfIMG['Northing(m)'] ) )
+                        geometry=gpd.points_from_xy( 
+                        self.dfIMG['Easting(m)'], self.dfIMG['Northing(m)'] ) )
         print( f'Reading {len(self.dfIMG)} images...')
         if 'IMG_FRTO' in self.TOML.keys():
             self.dfTRJ = self.Filter( self.dfIMG, self.TOML.IMG_FRTO )
@@ -41,13 +42,13 @@ class MMS_Box(_MMS_BoxViz.MMS_BoxViz):
             self.dfTRJ = self.dfTRJ.iloc[::-1]
         self.dfTRJ.reset_index(drop=True,inplace=True)
 
-        self.dfDIV,self.LS = self.LineStringDIV()
+        self.dfDIV, self.LS = self.LineStringDIV()
         self.dfBOX = self.GenerateBox()
         print( self.dfBOX[['km_fr', 'km_to', 'div_len', 'npnt' , 'geometry']] )
 
-    def FillOptional( self , TOML):
-        DEFAULT = { 'OUT_FOLDER' : './CACHE', 'EPSG':32647, 'REVERSE_TRJ' : False,
-                    'DIV':1000,'STA_BEG':0,'WIDTH':30 }
+    def InitialOptional( self , TOML):
+        DEFAULT = { 'OUT_FOLDER':'./CACHE', 'EPSG':32647, 'REVERSE_TRJ':False,
+                    'OFFSET_TRJ':False, 'DIV':1000, 'STA_BEG':0, 'WIDTH':30 }
         for k,v in DEFAULT.items():
             if k not in TOML.keys():
                 TOML[k]=v
@@ -62,6 +63,9 @@ class MMS_Box(_MMS_BoxViz.MMS_BoxViz):
         DIV = self.TOML.DIV
         STA_BEG = self.TOML.STA_BEG
         ls = LineString( self.dfTRJ[['Easting(m)', 'Northing(m)']].to_numpy() )
+        #import pdb ; pdb.set_trace()
+        if self.TOML.OFFSET_TRJ:
+            ls = ls.offset_curve( self.TOML.OFFSET_TRJ,join_style=2,mitre_limit=10 )
         next_div = DIV*(divmod(STA_BEG,DIV)[0]+1)
         rest_div = next_div-STA_BEG
         pnt = np.arange( next_div, next_div+ls.length-rest_div, DIV )
@@ -199,7 +203,7 @@ if __name__=="__main__":
     parser.add_argument('-i', "--images", action='store_true',
             help="copy images to BOX folders [STEP-4]")
     parser.add_argument("--version", action="version", 
-            version="%(prog)s : version 0.6 (24Jan2025)")
+            version="%(prog)s : version 0.65 (25Jan2025)")
 
     ARGS = parser.parse_args()
     print(ARGS)
@@ -243,7 +247,8 @@ if __name__=="__main__":
         for i,row in mms.dfIMG_BOX.iterrows():
             this_box = mms.dfBOX[ mms.dfBOX.boxes==row.boxes].iloc[0]
             fr = Path( dfImages[dfImages.Stem==row.Name ].iloc[0].Images )
-            to = Path( mms.TOML.OUT_FOLDER ) / 'RESULT' / TEMPLATE.format( this_box.km_fr,this_box.km_to )
+            to = Path( mms.TOML.OUT_FOLDER ) / 'RESULT' /\
+                       TEMPLATE.format( this_box.km_fr,this_box.km_to )
             OUTPATH = to / fr.name
             print( f'Copying to {OUTPATH} ...' )
             OUTPATH.parent.mkdir( parents=True, exist_ok=True ) 

@@ -25,7 +25,6 @@ class MMS_BoxViz:
             #import pdb; pdb.set_trace()
             df.to_file(GPKG, layer=f"{df.BOXTILE.iloc[0]}", driver="GPKG")
 
-
     def WriteVizKML( self ):
         kml = simplekml.Kml()
         FoldBox = kml.newfolder(name="Boxes")
@@ -47,7 +46,7 @@ class MMS_BoxViz:
 
     def KML_Box( self, Folder ):
         colors = ['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99',
-                    '#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a']        
+                  '#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a']        
         color_cycle = cycle( colors )
         dfBOX = self.dfBOX.to_crs(4326)
         for index, row in dfBOX.iterrows():
@@ -81,23 +80,13 @@ class MMS_BoxViz:
 
     def KML_Trj( self, Folder, ALTITUDE=10 ):
         ls = Folder.newlinestring(name="Trajectory",description="Trajectory")
-        trj = self.dfTRJ[['Longitude(deg)','Latitude(deg)']]
-        ls.coords = np.insert(trj.values, 2, ALTITUDE, axis=1).tolist()
+        dfLS = gpd.GeoDataFrame( crs=self.TOML.EPSG, geometry=[self.LS,] )
+        dfLS = dfLS.to_crs( 4326 )
+        coords = np.array(dfLS.iloc[0].geometry.coords)
         #import pdb; pdb.set_trace()
+        ls.coords = np.insert( coords, 2, ALTITUDE, axis=1).tolist()
         ls.altitudemode = simplekml.AltitudeMode.relativetoground
         ls.extrude = 1  # Extend the LineString to the ground
-        for index, row in self.dfTRJ.iterrows():
-            pnt = Folder.newpoint(name= str(index),
-                    coords=[(row['Longitude(deg)'], row['Latitude(deg)'])])
-            pnt.visibility = 0
-            pnt.description = f"""
-                Image : {row['Name']}
-                Height(m): {row['Height(m)']}
-                H_Ell(m): {row['H_Ell(m)']}
-            """
-            pnt.style.labelstyle.color = '7f0000ff'
-            pnt.style.iconstyle.icon.href = 'http://maps.google.com/mapfiles/kml/shapes/placemark_circle.png'
-            pnt.style.iconstyle.color = '7f0000ff'
 
     def KML_Img( self, Folder ):
         for index, row in self.dfIMG.iterrows():
