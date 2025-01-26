@@ -1,10 +1,11 @@
 #
-# MMS_Box : first, clip large LAS files by creating simple rectangular tiles.
+# MMS_Box : first, crop large LAS files by creating simple rectangular tiles.
 #           Then, create boxes of 1-kilometer length parallel to the road alignment.
-#           Each box will clip out its corresponding point cloud data in multiple parts.
-#           Finally, merge the clipped parts to form the complete point cloud data i
-#           within the full box boundary.**
+#           Each box will cropped out its corresponding point cloud data in multiple parts.
+#           Finally, merge the cropped parts to form the complete point cloud data i
+#           within the full box boundary.
 # history : Phisan Santitamnont ( phisan.chula@gmail.com , phisan.s@cdg.co.th )
+# VERSION = "0.1 (Dec15,2024)
 VERSION = "0.7 (Jan26,2025)"
 #
 import tomllib
@@ -131,7 +132,7 @@ class MMS_Box(_MMS_BoxViz.MMS_BoxViz):
         return dfTile
 
     def GenerateBoxClipTile( self ):
-        ''' generate list of operations only, no actual clipping'''
+        ''' generate list of operations only, no actual crop'''
         dfTile = pd.DataFrame(  glob.glob(self.TOML.PNT_CLD), columns=['FileLAS'] )
         assert len(dfTile)>0,\
           f'Expecting many tiles from "pdal tile --length 500 BIG_PC.las tile#.las"'
@@ -146,12 +147,12 @@ class MMS_Box(_MMS_BoxViz.MMS_BoxViz):
             for i_tile, row_tile in row_box.iterrows(): 
                 OUTFILE = str( box_folder / f'{row_tile.tiles:}.las' )
                 box_tile.append( [i_box, row_tile.geometry, row_tile.FileLAS, OUTFILE])
-        dfCLIP = pd.DataFrame( box_tile , columns=['BOX', 'WKT_GEOM','TILES', 'BOXTILE'] )
-        self.dfCLIP = gpd.GeoDataFrame( dfCLIP,crs=self.TOML.EPSG,geometry=dfCLIP.WKT_GEOM )
+        dfCROP = pd.DataFrame( box_tile , columns=['BOX', 'WKT_GEOM','TILES', 'BOXTILE'] )
+        self.dfCROP = gpd.GeoDataFrame( dfCROP,crs=self.TOML.EPSG,geometry=dfCROP.WKT_GEOM )
         #import pdb; pdb.set_trace()
 
     def GenerateBoxClipImage( self ):
-        ''' generate list of operations only, no actual clipping'''
+        ''' generate list of operations only, no actual crop'''
         joined = gpd.sjoin(self.dfIMG, self.dfBOX[['geometry', 'boxes']], 
                            how='left', predicate='intersects')
         self.dfIMG_BOX = joined.dropna()[['Name','boxes', 'geometry']]
@@ -165,8 +166,10 @@ class MMS_Box(_MMS_BoxViz.MMS_BoxViz):
                 { "type": "writers.las", "filename": str(OUTFILE) }
             ]
         }
+        pipe_json = json.dumps(pipeline)
+        if self.ARGS.debug: print( f'ClipPoly(),{pipe_json}' )
         try:
-            pipeline = pdal.Pipeline(json.dumps(pipeline))
+            pipeline = pdal.Pipeline( pipe_json )
             pipeline.execute()
         except Exception as e:
             print(f"Error ClipPoly() LAS files: {e}")
@@ -176,11 +179,12 @@ class MMS_Box(_MMS_BoxViz.MMS_BoxViz):
         pipeline_list = LASFiles 
         pipeline_list.append( { "type":"filters.merge" } )
         pipeline_list.append( { "type":WRITER, "filename": LASOut } )
-        #import pdb; pdb.set_trace()
         # Convert dictionary to JSON string
-        pipeline_json = json.dumps(pipeline_list)
-        pipeline = pdal.Pipeline(json=pipeline_json)
+        pipe_json = json.dumps(pipeline_list)
+        #import pdb; pdb.set_trace()
+        if self.ARGS.debug: print( f'ClipPoly(),{pipe_json}' )
         try:
+            pipeline = pdal.Pipeline(json=pipe_json)
             pipeline.execute()
             print(f"Merging successful. Output file: {LASOut}")
         except Exception as e:
@@ -196,10 +200,10 @@ if __name__=="__main__":
     grp_prc = parser.add_mutually_exclusive_group()
     grp_fmt = parser.add_mutually_exclusive_group(required=False)
 
-    grp_prc.add_argument('-c',"--clip", action='store_true',
-            help="clip point-cloud data in multiple parts [STEP-2]")
+    grp_prc.add_argument('-c',"--crop", action='store_true',
+            help="crop point-cloud data in multiple parts [STEP-2]")
     grp_prc.add_argument('-m', "--merge", action='store_true',
-            help="merge clipped parts, write BOXs of Las [STEP-3]")
+            help="merge cropped parts, write BOXs of Las [STEP-3]")
 
     grp_fmt.add_argument("--copc", action='store_true',
             help='use COPC format instead of LAS, during "merge" stage')
@@ -209,6 +213,8 @@ if __name__=="__main__":
     grp_prc.add_argument('-i', "--images", action='store_true',
             help="copy images to BOX folders [STEP-4]")
 
+    parser.add_argument('-d', "--debug", action='store_true',
+            help="debug mode ; echo pipelines for crop and merge")
     parser.add_argument("--version", action="version", 
             version=f"%(prog)s : version {VERSION}" )
 
@@ -223,8 +229,8 @@ if __name__=="__main__":
     mms.WriteVizGPCK()
     mms.WriteVizKML()
     #import pdb; pdb.set_trace()
-    if ARGS.clip:
-        for i,row in mms.dfCLIP.iterrows():
+    if ARGS.crop:
+        for i,row in mms.dfCROP.iterrows():
             #import pdb; pdb.set_trace()
             print( f'Clipping las files to {row.BOXTILE} ...' )
             Path(row.BOXTILE).parent.mkdir( parents=True, exist_ok=True ) 
@@ -239,7 +245,7 @@ if __name__=="__main__":
         else:
             WRITER='writers.las';  LAS_FMT = SECT_FMT + '.las'
 
-        for grp,row in mms.dfCLIP.groupby('BOX'):
+        for grp,row in mms.dfCROP.groupby('BOX'):
             this_box = mms.dfBOX[mms.dfBOX.boxes==grp ].iloc[0]
             OUTFILE = LAS_FMT.format( this_box.km_fr, this_box.km_to )
             print( f'Merging las files to {OUTFILE} ...' )

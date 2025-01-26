@@ -19,8 +19,8 @@ class MMS_BoxViz:
         GPKG.parent.mkdir( parents=True, exist_ok=True )
         self.dfBOX.to_file( GPKG, layer="Box", driver="GPKG")
         self.dfTile.to_file(GPKG, layer="Tile", driver="GPKG")
-        for i in range(len(self.dfCLIP)):
-            df = self.dfCLIP.iloc[i:i+1]
+        for i in range(len(self.dfCROP)):
+            df = self.dfCROP.iloc[i:i+1]
             df.to_file(GPKG, layer=f"{df.BOXTILE.iloc[0]}", driver="GPKG")
         self.dfLS.to_file(GPKG, layer="CenterLine", driver="GPKG")
         #import pdb; pdb.set_trace()
