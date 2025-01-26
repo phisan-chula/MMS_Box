@@ -1,5 +1,6 @@
 #
-#
+# _MMS_BoxViz.py : Extending MMS_Box class for visualizing data in KML
+#                  or GPCK 
 #
 import simplekml
 import numpy as np
@@ -13,17 +14,16 @@ from itertools import cycle
 
 class MMS_BoxViz:
     def WriteVizGPCK(self):
-        # Save the KML file
         GPKG = Path( self.TOML.OUT_FOLDER ) / "MMS_BoxViz.gpkg"
         print( f'Writing ...{GPKG} ...')
         GPKG.parent.mkdir( parents=True, exist_ok=True )
         self.dfBOX.to_file( GPKG, layer="Box", driver="GPKG")
         self.dfTile.to_file(GPKG, layer="Tile", driver="GPKG")
-        #self.dfCLIP.to_file(GPKG, layer="Clip_Inter", driver="GPKG")
         for i in range(len(self.dfCLIP)):
             df = self.dfCLIP.iloc[i:i+1]
-            #import pdb; pdb.set_trace()
             df.to_file(GPKG, layer=f"{df.BOXTILE.iloc[0]}", driver="GPKG")
+        self.dfLS.to_file(GPKG, layer="CenterLine", driver="GPKG")
+        #import pdb; pdb.set_trace()
 
     def WriteVizKML( self ):
         kml = simplekml.Kml()
@@ -38,7 +38,6 @@ class MMS_BoxViz:
         FoldTile = kml.newfolder(name="Tiles")
         self.KML_Tindex( FoldTile )
         
-        # Save the KML file
         KML = Path( self.TOML.OUT_FOLDER ) / "MMS_BoxViz.kml"
         print( f'Writing ...{KML} ...')
         KML.parent.mkdir( parents=True, exist_ok=True )
@@ -79,9 +78,8 @@ class MMS_BoxViz:
             pnt.style.iconstyle.color = '7f0000ff'
 
     def KML_Trj( self, Folder, ALTITUDE=10 ):
-        ls = Folder.newlinestring(name="Trajectory",description="Trajectory")
-        dfLS = gpd.GeoDataFrame( crs=self.TOML.EPSG, geometry=[self.LS,] )
-        dfLS = dfLS.to_crs( 4326 )
+        ls = Folder.newlinestring(name="CenterLine",description="Centerline of Road Boxes")
+        dfLS = self.dfLS.to_crs( 4326 )
         coords = np.array(dfLS.iloc[0].geometry.coords)
         #import pdb; pdb.set_trace()
         ls.coords = np.insert( coords, 2, ALTITUDE, axis=1).tolist()

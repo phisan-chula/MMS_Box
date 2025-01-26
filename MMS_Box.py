@@ -4,6 +4,8 @@
 #           Each box will clip out its corresponding point cloud data in multiple parts.
 #           Finally, merge the clipped parts to form the complete point cloud data i
 #           within the full box boundary.**
+# history : Phisan Santitamnont ( phisan.chula@gmail.com , phisan.s@cdg.co.th )
+VERSION = "0.7 (Jan26,2025)"
 #
 import tomllib
 import json
@@ -21,7 +23,6 @@ from shapely.ops import substring
 from pathlib import Path
 
 import _MMS_BoxViz
-
 class MMS_Box(_MMS_BoxViz.MMS_BoxViz):
     def __init__( self, TOML, ARGS ):
         self.InitialOptional(TOML)
@@ -42,7 +43,7 @@ class MMS_Box(_MMS_BoxViz.MMS_BoxViz):
             self.dfTRJ = self.dfTRJ.iloc[::-1]
         self.dfTRJ.reset_index(drop=True,inplace=True)
 
-        self.dfDIV, self.LS = self.LineStringDIV()
+        self.dfDIV,self.dfLS = self.LineStringDIV()
         self.dfBOX = self.GenerateBox()
         print( self.dfBOX[['km_fr', 'km_to', 'div_len', 'npnt' , 'geometry']] )
 
@@ -62,15 +63,14 @@ class MMS_Box(_MMS_BoxViz.MMS_BoxViz):
     def LineStringDIV( self ): 
         DIV = self.TOML.DIV
         STA_BEG = self.TOML.STA_BEG
-        ls = LineString( self.dfTRJ[['Easting(m)', 'Northing(m)']].to_numpy() )
-        #import pdb ; pdb.set_trace()
+        LS = LineString( self.dfTRJ[['Easting(m)', 'Northing(m)']].to_numpy() )
         if self.TOML.OFFSET_TRJ:
-            ls = ls.offset_curve( self.TOML.OFFSET_TRJ,join_style=2,mitre_limit=10 )
+            LS = LS.offset_curve( self.TOML.OFFSET_TRJ,join_style=2,mitre_limit=10 )
         next_div = DIV*(divmod(STA_BEG,DIV)[0]+1)
         rest_div = next_div-STA_BEG
-        pnt = np.arange( next_div, next_div+ls.length-rest_div, DIV )
+        pnt = np.arange( next_div, next_div+LS.length-rest_div, DIV )
         pnt = np.insert( pnt,  0, STA_BEG ) 
-        pnt = np.append( pnt,  STA_BEG+ls.length ) 
+        pnt = np.append( pnt,  STA_BEG+LS.length ) 
         pnt0 = pnt-pnt[0]
         df = pd.DataFrame( {'dist_km': pnt ,'dist_0':pnt0 } ) 
         def MkPnt( row, LS ):
@@ -79,9 +79,10 @@ class MMS_Box(_MMS_BoxViz.MMS_BoxViz):
             sta = '{:03d}+{:03d}'.format(int(km),int(meter))
             pnt = LS.interpolate( row.dist_0 , normalized=False )
             return sta,pnt
-        df[['STA','geometry']] = df.apply( MkPnt, axis=1, result_type='expand', args=(ls,) )
-        gdf = gpd.GeoDataFrame( df, crs=self.TOML.EPSG, geometry=df.geometry )
-        return gdf,ls
+        df[['STA','geometry']] = df.apply( MkPnt, axis=1, result_type='expand', args=(LS,) )
+        dfDIV = gpd.GeoDataFrame( df, crs=self.TOML.EPSG, geometry=df.geometry )
+        dfLS =  gpd.GeoDataFrame( crs=self.TOML.EPSG, geometry=[LS,] )
+        return dfDIV,dfLS
 
     def POLY2WKT( self, poly ):
         coord = list()
@@ -98,9 +99,9 @@ class MMS_Box(_MMS_BoxViz.MMS_BoxViz):
     def GenerateBox( self ):
         boxes = list()
         for i in range(len(self.dfDIV)-1):
-            stt = self.dfDIV.iloc[i  ].dist_0
-            end = self.dfDIV.iloc[i+1].dist_0
-            ss = substring( self.LS, start_dist=stt, end_dist=end, normalized=False)
+            stt = self.dfDIV.iloc[i  ].dist_0 ; end = self.dfDIV.iloc[i+1].dist_0
+            ss = substring( self.dfLS.iloc[0].geometry, 
+                            start_dist=stt, end_dist=end, normalized=False)
             buf = ss.buffer(self.TOML.WIDTH, cap_style='flat' )
             npnt = len(buf.exterior.coords)-1
             boxes.append( [self.dfDIV.iloc[i].dist_km, self.dfDIV.iloc[i+1].dist_km, 
@@ -192,27 +193,32 @@ if __name__=="__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("TOML", 
             help="TOML file, read trajectory and BOX parameters [STEP-1]")
-    parser.add_argument('-c',"--clip", action='store_true',
+    grp_prc = parser.add_mutually_exclusive_group()
+    grp_fmt = parser.add_mutually_exclusive_group(required=False)
+
+    grp_prc.add_argument('-c',"--clip", action='store_true',
             help="clip point-cloud data in multiple parts [STEP-2]")
-    parser.add_argument('-m', "--merge", action='store_true',
+    grp_prc.add_argument('-m', "--merge", action='store_true',
             help="merge clipped parts, write BOXs of Las [STEP-3]")
-    parser.add_argument("--copc", action='store_true',
+
+    grp_fmt.add_argument("--copc", action='store_true',
             help='use COPC format instead of LAS, during "merge" stage')
-    parser.add_argument("--laz", action='store_true',
+    grp_fmt.add_argument("--laz", action='store_true',
             help='use LAZ format instead of LAS, during "merge" stage')
-    parser.add_argument('-i', "--images", action='store_true',
+
+    grp_prc.add_argument('-i', "--images", action='store_true',
             help="copy images to BOX folders [STEP-4]")
+
     parser.add_argument("--version", action="version", 
-            version="%(prog)s : version 0.65 (25Jan2025)")
+            version=f"%(prog)s : version {VERSION}" )
 
     ARGS = parser.parse_args()
     print(ARGS)
     with open( ARGS.TOML , "rb") as f:
         # Parse the TOML file content
         TOML = tomllib.load(f)
-    #####################################
+    ####################################################
     mms = MMS_Box( TOML, ARGS )
-    TEMPLATE = 'km_{:06d}_{:06d}'
     mms.GenerateBoxClipTile()
     mms.WriteVizGPCK()
     mms.WriteVizKML()
@@ -224,17 +230,18 @@ if __name__=="__main__":
             Path(row.BOXTILE).parent.mkdir( parents=True, exist_ok=True ) 
             mms.ClipPoly( str(row.WKT_GEOM), row.TILES, row.BOXTILE ) 
 
+    SECT_FMT = 'km_{:06d}_{:06d}'
     if ARGS.merge:
         if ARGS.copc:
-            WRITER="writers.copc"; TEMPLATE = TEMPLATE + '.copc.laz'
+            WRITER="writers.copc"; LAS_FMT = SECT_FMT + '.copc.laz'
         elif ARGS.laz:
-            WRITER="writers.las";  TEMPLATE = TEMPLATE + '.laz'
+            WRITER="writers.las";  LAS_FMT = SECT_FMT + '.laz'
         else:
-            WRITER='writers.las';  TEMPLATE = TEMPLATE + '.las'
+            WRITER='writers.las';  LAS_FMT = SECT_FMT + '.las'
 
         for grp,row in mms.dfCLIP.groupby('BOX'):
             this_box = mms.dfBOX[mms.dfBOX.boxes==grp ].iloc[0]
-            OUTFILE = TEMPLATE.format( this_box.km_fr, this_box.km_to )
+            OUTFILE = LAS_FMT.format( this_box.km_fr, this_box.km_to )
             print( f'Merging las files to {OUTFILE} ...' )
             OUTPATH = Path(mms.TOML.OUT_FOLDER) / 'RESULT' / OUTFILE
             OUTPATH.parent.mkdir( parents=True, exist_ok=True ) 
@@ -248,7 +255,7 @@ if __name__=="__main__":
             this_box = mms.dfBOX[ mms.dfBOX.boxes==row.boxes].iloc[0]
             fr = Path( dfImages[dfImages.Stem==row.Name ].iloc[0].Images )
             to = Path( mms.TOML.OUT_FOLDER ) / 'RESULT' /\
-                       TEMPLATE.format( this_box.km_fr,this_box.km_to )
+                       SECT_FMT.format( this_box.km_fr,this_box.km_to )
             OUTPATH = to / fr.name
             print( f'Copying to {OUTPATH} ...' )
             OUTPATH.parent.mkdir( parents=True, exist_ok=True ) 
