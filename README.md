@@ -32,18 +32,19 @@ tiles/tile0_-3.las
    The 4th step is organizing of image files falling within each boxes.  
 
 ```
-usage: MMS_Box.py [-h] [-c] [-m] [--copc] [--laz] [-i] [--version] TOML
+usage: MMS_Box.py [-h] [-c] [-m] [--copc | --laz] [-i] [-d] [--version] TOML
 
 positional arguments:
   TOML          TOML file, read trajectory and BOX parameters [STEP-1]
 
 options:
   -h, --help    show this help message and exit
-  -c, --clip    clip point-cloud data in multiple parts [STEP-2]
-  -m, --merge   merge clipped parts, write BOXs of Las [STEP-3]
+  -c, --crop    crop point-cloud data in multiple parts [STEP-2]
+  -m, --merge   merge cropped parts, write BOXs of Las [STEP-3]
   --copc        use COPC format instead of LAS, during "merge" stage
   --laz         use LAZ format instead of LAS, during "merge" stage
   -i, --images  copy images to BOX folders [STEP-4]
+  -d, --debug   debug mode ; echo pipelines for crop and merge
   --version     show program's version number and exit
 
 ```  
