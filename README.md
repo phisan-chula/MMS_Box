@@ -1,4 +1,4 @@
-**MMS_Box.py : version 0.7 (Jan26,2025)**
+**MMS_Box.py : version 0.71 (Jan28,2025) --copc & --ncore N**
 
 # MMS_Box 
 
