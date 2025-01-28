@@ -6,7 +6,8 @@
 #           within the full box boundary.
 # history : Phisan Santitamnont ( phisan.chula@gmail.com , phisan.s@cdg.co.th )
 # VERSION = "0.1 (Dec15,2024)
-VERSION = "0.7 (Jan26,2025)"
+# VERSION = "0.7 (Jan26,2025)"
+VERSION = "0.71 (Jan28,2025) --copc & --ncore N "
 #
 import tomllib
 import json
@@ -178,7 +179,12 @@ class MMS_Box(_MMS_BoxViz.MMS_BoxViz):
         assert type(LASFiles)==list
         pipeline_list = LASFiles 
         pipeline_list.append( { "type":"filters.merge" } )
-        pipeline_list.append( { "type":WRITER, "filename": LASOut } )
+        if self.ARGS.ncore>1 and self.ARGS.copc:
+            print( f'*** invoke --ncores {self.ARGS.ncore:} and --COPC ... ' )
+            pipeline_list.append( { "type":WRITER, "filename": LASOut, 
+                                    "threads":self.ARGS.ncore  } )
+        else:
+            pipeline_list.append( { "type":WRITER, "filename": LASOut } )
         # Convert dictionary to JSON string
         pipe_json = json.dumps(pipeline_list)
         #import pdb; pdb.set_trace()
@@ -205,6 +211,8 @@ if __name__=="__main__":
     grp_prc.add_argument('-m', "--merge", action='store_true',
             help="merge cropped parts, write BOXs of Las [STEP-3]")
 
+    parser.add_argument('-n',"--ncore", type=int, default=0,
+            help='parallel processing with multicore , only with --copc')
     grp_fmt.add_argument("--copc", action='store_true',
             help='use COPC format instead of LAS, during "merge" stage')
     grp_fmt.add_argument("--laz", action='store_true',
