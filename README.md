@@ -1,4 +1,4 @@
-**MMS_Box.py : version 0.71 (Jan28,2025) --copc & --ncore N**
+**MMS_Box.py : version 0.8 (Jan29,2025) # remove --merge use --las/laz/cope ; --copc & --ncore N**
 
 # MMS_Box 
 
@@ -32,7 +32,7 @@ tiles/tile0_-3.las
    The 4th step is organizing of image files falling within each boxes.  
 
 ```
-usage: MMS_Box.py [-h] [-c] [-m] [-n NCORE] [--copc | --laz] [-i] [-d] [--version] TOML
+usage: MMS_Box.py [-h] [-c] [-n NCORE] [--las] [--laz] [--copc] [-i] [-d] [--version] TOML
 
 positional arguments:
   TOML                  TOML file, read trajectory and BOX parameters [STEP-1]
@@ -40,15 +40,14 @@ positional arguments:
 options:
   -h, --help            show this help message and exit
   -c, --crop            crop point-cloud data in multiple parts [STEP-2]
-  -m, --merge           merge cropped parts, write BOXs of Las [STEP-3]
   -n NCORE, --ncore NCORE
                         parallel processing with multicore , only with --copc
-  --copc                use COPC format instead of LAS, during "merge" stage
-  --laz                 use LAZ format instead of LAS, during "merge" stage
+  --las                 merge cropped parts and write BOXes of LAS [STEP-3a]
+  --laz                 merge cropped parts and write BOXes of LAZ [STEP-3b]
+  --copc                merge cropped parts and write BOXes of COPC [STEP-3c]
   -i, --images          copy images to BOX folders [STEP-4]
-  -d, --debug           debug mode ; echo pipelines for crop and merge
+  -d, --debug           debug mode ; echo PDAL pipelines for crop and merge
   --version             show program's version number and exit
-
 ```  
 
 ### 3) The result of an MMS mission will be visualized in KML or GPCK.
