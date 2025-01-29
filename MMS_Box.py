@@ -7,7 +7,8 @@
 # history : Phisan Santitamnont ( phisan.chula@gmail.com , phisan.s@cdg.co.th )
 # VERSION = "0.1 (Dec15,2024)
 # VERSION = "0.7 (Jan26,2025)"
-VERSION = "0.71 (Jan28,2025) --copc & --ncore N "
+#VERSION = "0.71 (Jan28,2025) --copc & --ncore N "
+VERSION = "0.8 (Jan29,2025) # remove --merge use --las/laz/cope ; --copc & --ncore N "
 #
 import tomllib
 import json
@@ -203,26 +204,24 @@ if __name__=="__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("TOML", 
             help="TOML file, read trajectory and BOX parameters [STEP-1]")
-    grp_prc = parser.add_mutually_exclusive_group()
-    grp_fmt = parser.add_mutually_exclusive_group(required=False)
 
-    grp_prc.add_argument('-c',"--crop", action='store_true',
+    parser.add_argument('-c',"--crop", action='store_true',
             help="crop point-cloud data in multiple parts [STEP-2]")
-    grp_prc.add_argument('-m', "--merge", action='store_true',
-            help="merge cropped parts, write BOXs of Las [STEP-3]")
 
     parser.add_argument('-n',"--ncore", type=int, default=0,
             help='parallel processing with multicore , only with --copc')
-    grp_fmt.add_argument("--copc", action='store_true',
-            help='use COPC format instead of LAS, during "merge" stage')
-    grp_fmt.add_argument("--laz", action='store_true',
-            help='use LAZ format instead of LAS, during "merge" stage')
+    parser.add_argument("--las", action='store_true',
+            help="merge cropped parts and write BOXes of LAS [STEP-3a]")
+    parser.add_argument("--laz", action='store_true',
+            help="merge cropped parts and write BOXes of LAZ [STEP-3b]")
+    parser.add_argument("--copc", action='store_true',
+            help="merge cropped parts and write BOXes of COPC [STEP-3c]")
 
-    grp_prc.add_argument('-i', "--images", action='store_true',
+    parser.add_argument('-i', "--images", action='store_true',
             help="copy images to BOX folders [STEP-4]")
 
     parser.add_argument('-d', "--debug", action='store_true',
-            help="debug mode ; echo pipelines for crop and merge")
+            help="debug mode ; echo PDAL pipelines for crop and merge")
     parser.add_argument("--version", action="version", 
             version=f"%(prog)s : version {VERSION}" )
 
@@ -245,14 +244,13 @@ if __name__=="__main__":
             mms.ClipPoly( str(row.WKT_GEOM), row.TILES, row.BOXTILE ) 
 
     SECT_FMT = 'km_{:06d}_{:06d}'
-    if ARGS.merge:
-        if ARGS.copc:
-            WRITER="writers.copc"; LAS_FMT = SECT_FMT + '.copc.laz'
+    if ARGS.las or ARGS.laz or ARGS.copc:
+        if ARGS.las:
+            WRITER='writers.las';  LAS_FMT = SECT_FMT + '.las'
         elif ARGS.laz:
             WRITER="writers.las";  LAS_FMT = SECT_FMT + '.laz'
-        else:
-            WRITER='writers.las';  LAS_FMT = SECT_FMT + '.las'
-
+        elif ARGS.copc:
+            WRITER="writers.copc"; LAS_FMT = SECT_FMT + '.copc.laz'
         for grp,row in mms.dfCROP.groupby('BOX'):
             this_box = mms.dfBOX[mms.dfBOX.boxes==grp ].iloc[0]
             OUTFILE = LAS_FMT.format( this_box.km_fr, this_box.km_to )
