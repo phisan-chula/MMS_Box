@@ -14,15 +14,24 @@ from itertools import cycle
 
 class MMS_BoxViz:
     def WriteVizGPCK(self):
-        GPKG = Path( self.TOML.OUT_FOLDER ) / "MMS_BoxViz.gpkg"
-        print( f'Writing ...{GPKG} ...')
+        GPKG      = Path( self.TOML.OUT_FOLDER ) / "MMS_BoxViz.gpkg"
+        GPKG_TILE = Path( self.TOML.OUT_FOLDER ) / "MMS_BoxVizTILE.gpkg"
+        GPKG_IMG  = Path( self.TOML.OUT_FOLDER ) / "MMS_BoxVizIMG.gpkg"
         GPKG.parent.mkdir( parents=True, exist_ok=True )
+        print( f'Writing ...{GPKG} ...')
+        print( f'Writing ...{GPKG_TILE} ...')
+        print( f'Writing ...{GPKG_IMG} ...')
+        self.dfLS.to_file(GPKG, layer="CenterLine", driver="GPKG")
+        self.dfTRJ.to_file( GPKG, layer='Images', driver='GPKG')
+        self.dfDIV.to_file( GPKG, layer='Division', driver='GPKG')
         self.dfBOX.to_file( GPKG, layer="Box", driver="GPKG")
-        self.dfTile.to_file(GPKG, layer="Tile", driver="GPKG")
+        for i in range(len(self.dfTile)):
+            df = self.dfTile.iloc[i:i+1]
+            df.to_file(GPKG_TILE, layer=f"{df.iloc[0].tiles}", driver="GPKG")
         for i in range(len(self.dfCROP)):
             df = self.dfCROP.iloc[i:i+1]
-            df.to_file(GPKG, layer=f"{df.BOXTILE.iloc[0]}", driver="GPKG")
-        self.dfLS.to_file(GPKG, layer="CenterLine", driver="GPKG")
+            df.to_file(GPKG_TILE, layer=f"{df.BOXTILE.iloc[0]}", driver="GPKG")
+        self.dfIMG.to_file( GPKG_IMG, layer="Box", driver="GPKG")
         #import pdb; pdb.set_trace()
 
     def WriteVizKML( self ):
@@ -92,7 +101,7 @@ class MMS_BoxViz:
                     coords=[(row['Longitude(deg)'], row['Latitude(deg)'])])
             pnt.visibility = 0
             pnt.description = f"""
-                GPSTime(sec): {row['GPSTime(sec)']}
+                UTCTime(sec): {row['UTCTime']}
                 Easting(m): {row['Easting(m)']}
                 Northing(m): {row['Northing(m)']}
                 Height(m): {row['Height(m)']}

@@ -6,10 +6,12 @@
 #           within the full box boundary.
 # history : Phisan Santitamnont ( phisan.chula@gmail.com , phisan.s@cdg.co.th )
 # VERSION = "0.1 (Dec15,2024)
-# VERSION = "0.7 (Jan26,2025)"
 #VERSION = "0.71 (Jan28,2025) --copc & --ncore N "
-VERSION = "0.8 (Jan29,2025) # remove --merge use --las/laz/cope ; --copc & --ncore N "
+#VERSION = "0.8 (Jan29,2025) # remove --merge use --las/laz/cope ; --copc & --ncore N "
+VERSION = "0.9 (Feb14,2025) # one-line summary" 
 #
+import georinex
+import datetime 
 import tomllib
 import json
 import glob
@@ -30,7 +32,10 @@ class MMS_Box(_MMS_BoxViz.MMS_BoxViz):
     def __init__( self, TOML, ARGS ):
         self.InitialOptional(TOML)
         self.ARGS = ARGS
-        self.dfIMG = pd.read_csv(self.TOML.TRJ_IMG, sep='\\s+',engine='python' )
+        self.dfIMG = pd.read_csv(self.TOML.TRJ_IMG, sep='\\s+',engine='c' )
+        # bug AU20 CHC-AU20
+        self.dfIMG = self.dfIMG.rename( columns={'GPSTime(sec)': 'UTCTime' } )
+
         self.dfIMG = gpd.GeoDataFrame( self.dfIMG, crs=self.TOML.EPSG, 
                         geometry=gpd.points_from_xy( 
                         self.dfIMG['Easting(m)'], self.dfIMG['Northing(m)'] ) )
@@ -197,6 +202,46 @@ class MMS_Box(_MMS_BoxViz.MMS_BoxViz):
         except Exception as e:
             print(f"Error during MergePart(): {e}")
 
+    def DoSummary(self, IMU_SAMPLING=1_000):
+        '''  IMU_SAMPLING Extract imu-data from every nth line. '''
+        def _skip(nLINE):
+            BEG_LINE = 13  # Novate WayPoint/IE  format
+            return nLINE < BEG_LINE or (nLINE - BEG_LINE) % IMU_SAMPLING != 0
+        TRJ_IMU = self.TOML.TRJ_IMU
+        _HDR = pd.read_csv(TRJ_IMU,skiprows=lambda x: x != 11, header=None)
+        _HDR = _HDR.iloc[0][0].split()
+        ########################################
+        dfIMU = pd.read_csv(TRJ_IMU,skiprows=_skip,sep='\\s+', #nrows=5000, 
+                                names=_HDR, header=None, engine='c') 
+        dfIMU['spd_kmh'] = (36/10)*dfIMU[["VelBdyX", "VelBdyY", "VelBdyZ"]].apply(
+                                lambda row: np.linalg.norm(row), axis=1)
+        def spd_from_TRJ():
+            trj_beg = self.dfTRJ.iloc[ 0];  trj_end = self.dfTRJ.iloc[-1] 
+            idx_beg = ((dfIMU["UTCTime"] - trj_beg['UTCTime']  ).abs()).idxmin()
+            idx_end = ((dfIMU["UTCTime"] - trj_end['UTCTime']  ).abs()).idxmin()
+            if idx_beg>idx_end:
+                idx_beg,idx_end = idx_end,idx_beg
+            spd = dfIMU.iloc[idx_beg:idx_end].spd_kmh.describe()
+            return (int(spd['mean']),int(spd['max']) )
+        SPD = spd_from_TRJ()
+        DTbeg = datetime.datetime.fromtimestamp(self.dfTRJ.iloc[0].UTCTime)
+        DTend = datetime.datetime.fromtimestamp(self.dfTRJ.iloc[-1].UTCTime)
+        def HHMM( DTbeg,DTend):
+            if DTbeg > DTend: dura = DTbeg-DTend
+            else: dura = DTend-DTbeg
+            # prevent 'minute' truncation ; 30 minute add
+            minu,secs = divmod( dura.total_seconds(), 60 )
+            hour,minu = divmod( minu, 60 )
+            return f"{int(hour)}:{int(minu):02d}"
+        DURA = HHMM( DTbeg,DTend )
+        ######################################
+        KM_fr = self.dfBOX.iloc[0].km_fr 
+        KM_to = self.dfBOX.iloc[-1].km_to 
+        TIME = DTbeg.strftime("%Y-%m-%dT%H:%M"),DTend.strftime("%Y-%m-%dT%H:%M"),DURA
+        print( 'KM_fr,KM_to,DT_beg,DT_end,HHMM,KMH_mean,KMH_max' )
+        print( f'{KM_fr},{KM_to},{ ",".join( TIME ) },{SPD[0]},{SPD[1]}' )
+        #import pdb; pdb.set_trace()
+
 ##################################################################
 ##################################################################
 ##################################################################
@@ -224,9 +269,9 @@ if __name__=="__main__":
             help="debug mode ; echo PDAL pipelines for crop and merge")
     parser.add_argument("--version", action="version", 
             version=f"%(prog)s : version {VERSION}" )
-
     ARGS = parser.parse_args()
     print(ARGS)
+
     with open( ARGS.TOML , "rb") as f:
         # Parse the TOML file content
         TOML = tomllib.load(f)
@@ -235,7 +280,9 @@ if __name__=="__main__":
     mms.GenerateBoxClipTile()
     mms.WriteVizGPCK()
     mms.WriteVizKML()
-    #import pdb; pdb.set_trace()
+
+    mms.DoSummary()
+
     if ARGS.crop:
         for i,row in mms.dfCROP.iterrows():
             #import pdb; pdb.set_trace()
