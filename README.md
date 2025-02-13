@@ -1,5 +1,5 @@
-**MMS_Box.py : version 0.8 (Jan29,2025) # remove --merge use --las/laz/cope ; --copc & --ncore N**
-**MMS_Box.py : version 0.9 (Feb14,2025) # one-line summary**
+**MMS_Box.py : version 0.8 (Jan29,2025) # remove --merge use --las/laz/cope ; --copc & --ncore N**  
+**MMS_Box.py : version 0.9 (Feb14,2025) # one-line summary**  
 
 # MMS_Box 
 
