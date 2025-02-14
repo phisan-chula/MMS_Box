@@ -3,16 +3,16 @@
 #
 #EPSG = 32647   # optional ; default 32647
 TRJ_IMG = './Data/Trajectory/Trajectory_img.PosC'
+TRJ_IMU = './Data/Trajectory/Trajectory.PosT'
 #IMG_FRTO = ['076KNA46062002636','076KNA46062003230' ] # FWD
 IMG_FRTO = ['076KNA46062000757', '076KNA46062001353'] # REV
 REVERSE_TRJ = true   # optional ; default = false
-OFFSET_TRJ = +14    # negative for right , positive for left
 
 PNT_CLD = './tiles/tile*.las'
 IMAGES = './Data/Panorama/*.jpg'
 
 #OUT_FOLDER = './CACHE'  # optional ; default './CACHE'
 
-DIV = 1000  # optional ; default 1000
+#DIV = 1000   # optional ; default 1000
 STA_BEG = 10300 # option ; default 0+000
-WIDTH = 70   # optional ; default 30
+WIDTH = 30   # optional ; default 30

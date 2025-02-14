@@ -22,7 +22,7 @@ class MMS_BoxViz:
         print( f'Writing ...{GPKG_TILE} ...')
         print( f'Writing ...{GPKG_IMG} ...')
         self.dfLS.to_file(GPKG, layer="CenterLine", driver="GPKG")
-        self.dfTRJ.to_file( GPKG, layer='Images', driver='GPKG')
+        self.dfCL.to_file( GPKG, layer='CL_Pont', driver='GPKG')
         self.dfDIV.to_file( GPKG, layer='Division', driver='GPKG')
         self.dfBOX.to_file( GPKG, layer="Box", driver="GPKG")
         for i in range(len(self.dfTile)):
