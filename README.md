@@ -68,6 +68,11 @@ Writing ...CACHE/MMS_BoxVizIMG.gpkg ...
 Writing ...CACHE/MMS_BoxViz.kml ...
 NAME,KM_fr,KM_to,nIMAGE,DT_beg,DT_end,HHMM,KMH_mean,KMH_max,CL_LEN,DT_proc
 Rachada,10300,13184,0597,2024-11-24T09:25,2024-11-24T09:16,00:09,19,38,2885,2025-02-14T15:47
+คำอธิบาย :
+NAME:ชื่อถนน, KM_fr:กิโลเมตรเริ่มต้น, KM_to:กิโลเมตรสิ้นสุด, nIMAGE:จำนวนภาพที่ผลิต,
+DT_beg: วันเวลาเริ่มต้น, DT_end:วันเวลาสิ้นสุด, HHMM:ระยะเวลาวิ่ง ชั่วโมง:นาที, 
+KMH_mean: ความเร็วเฉลี่ย กิโลเมตรต่อชั่วโมง, KMH_max: ความเร็วสูงสุด กิโลเมตรต่อชั่วโมง, 
+CL_LEN: ความยาวช่วงถนน เมตร, DT_proc:วันเวลาประมวลผล  
 ```
 
 
